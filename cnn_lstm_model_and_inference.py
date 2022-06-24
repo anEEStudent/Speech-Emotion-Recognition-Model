@@ -1,25 +1,19 @@
-### General imports ###
+#!/usr/bin/env python3
+
+# General imports 
 import os
 from glob import glob
 import numpy as np
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
-#!/usr/bin/env python3
-
-### Audio import ###
 import librosa
 from pathlib import Path
-
-## Basics ##
-import time
 import os
 import numpy as np
-
-## Audio Preprocessing ##
 import librosa
 from scipy.stats import zscore
 
-## Time Distributed CNN ##
+# Tf imports
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
@@ -27,12 +21,11 @@ from tensorflow.keras.layers import Input, Dense, Dropout, Activation, TimeDistr
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, BatchNormalization, Flatten
 from tensorflow.keras.layers import LSTM
 
-
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
-MAX_PAD_LENGTH = 48000
 
+### Preprocessing functions declarations ###
 def mel_spectrogram(y, sr=16000, n_fft=512, win_length=256, hop_length=128, window='hamming', n_mels=128, fmax=4000): 
     # Compute spectogram
     mel_spect = np.abs(librosa.stft(y, n_fft=n_fft, window=window, win_length=win_length, hop_length=hop_length)) ** 2
@@ -51,36 +44,45 @@ def frame(x, win_step=128, win_size=128):
     return frames
 
 def preprocess(dir, label, signals, labels): 
-  # Sample rate (16.0 kHz)
-  sample_rate = 16000     
-  # Max pad length (5.0 sec)
-  max_pad_len = MAX_PAD_LENGTH
-  walker = sorted(str(p) for p in Path(dir).glob(f'*.wav'))
+    # Sample rate (16.0 kHz)
+    sample_rate = 16000     
+    # Max pad length (5.0 sec)
+    max_pad_len = MAX_PAD_LENGTH
+    walker = sorted(str(p) for p in Path(dir).glob(f'*.wav'))
 
-  for i, path in enumerate(walker): 
-    y, sr = librosa.core.load(path, sr=sample_rate, offset=0.5)
-    # Z-normalization
-    y = zscore(y)
-    # Padding or truncated signal 
-    if len(y) < max_pad_len:    
-      y_padded = np.zeros(max_pad_len)
-      y_padded[:len(y)] = y
-      y = y_padded
-    elif len(y) > max_pad_len:
-      y = np.asarray(y[:max_pad_len])
+    for i, path in enumerate(walker): 
+        y, sr = librosa.core.load(path, sr=sample_rate, offset=0.5)
+        # Z-normalization
+        y = zscore(y)
+        # Padding or truncated signal 
+        if len(y) < max_pad_len:    
+            y_padded = np.zeros(max_pad_len)
+            y_padded[:len(y)] = y
+            y = y_padded
+        elif len(y) > max_pad_len:
+            y = np.asarray(y[:max_pad_len])
     signals.append(y)
     labels.append(label) 
-  return signals, labels 
+    return signals, labels 
 
+### End of Preprocessing functions declarations ###
+
+
+MAX_PAD_LENGTH = 48000 # Max pad length that we will use
+
+### Loading data for preprocessing, change directories as necessary ###
 signals = [] 
 labels = []
-signals, labels = preprocess('/home/teppei/Desktop/nlp_training_dataset/train_dataset/angry', 'angry', signals, labels)
-signals, labels = preprocess('/home/teppei/Desktop/nlp_training_dataset/train_dataset/fear', 'fear', signals, labels)
-signals, labels = preprocess('/home/teppei/Desktop/nlp_training_dataset/train_dataset/happy', 'happy', signals, labels)
-signals, labels = preprocess('/home/teppei/Desktop/nlp_training_dataset/train_dataset/neutral', 'neutral', signals, labels)
-signals, labels = preprocess('/home/teppei/Desktop/nlp_training_dataset/train_dataset/sad', 'sad', signals, labels)
+signals, labels = preprocess('train_dataset/angry', 'angry', signals, labels)
+signals, labels = preprocess('train_dataset/fear', 'fear', signals, labels)
+signals, labels = preprocess('train_dataset/happy', 'happy', signals, labels)
+signals, labels = preprocess('train_dataset/neutral', 'neutral', signals, labels)
+signals, labels = preprocess('train_dataset/sad', 'sad', signals, labels)
 mel_spect = np.asarray(list(map(mel_spectrogram, signals)))
+### End of data loading ###
 
+
+### Here, we are following the model architecture from https://github.com/maelfabien/Multimodal-Emotion-Recognition/blob/master/README.md#v-how-to-use-it-
 from keras.utils import np_utils
 from sklearn.preprocessing import LabelEncoder
 lb = LabelEncoder()
@@ -153,13 +155,12 @@ model.compile(optimizer=SGD(learning_rate=0.01, decay=1e-6, momentum=0.8), loss=
 # Save best model
 best_model_save = ModelCheckpoint('Trained_Model_extra.hdf5', save_best_only=True, monitor='val_accuracy', mode='max')
 
-# Early stopping
-# early_stopping = EarlyStopping(monitor='val_accuracy', patience=30, verbose=1, mode='max')
-
 NUM_EPOCHS = 300
 # Fit model
 history = model.fit(X_train_split, y_train_split, batch_size=64, epochs=NUM_EPOCHS, validation_data=(X_test_split, y_test_split), callbacks=[best_model_save])
 
+
+## Inferencing done here
 from keras.models import load_model
 best_model = load_model('Trained_Model_extra.hdf5')
 filenames = sorted(os.listdir('test_dataset'))
@@ -168,17 +169,17 @@ sample_rate = 16000
 # Max pad length (5.0 sec)
 max_pad_len = MAX_PAD_LENGTH
 for file in filenames: 
-  y, sr = librosa.core.load(Path('test_dataset/' + file), sr=sample_rate, offset=0.5)
-  # Z-normalization
-  y = zscore(y)
-  # Padding or truncated signal 
-  if len(y) < max_pad_len:    
-    y_padded = np.zeros(max_pad_len)
-    y_padded[:len(y)] = y
-    y = y_padded
-  elif len(y) > max_pad_len:
-    y = np.asarray(y[:max_pad_len])
-  test_signals.append(y)
+    y, sr = librosa.core.load(Path('test_dataset/' + file), sr=sample_rate, offset=0.5)
+    # Z-normalization
+    y = zscore(y)
+    # Padding or truncated signal 
+    if len(y) < max_pad_len:    
+        y_padded = np.zeros(max_pad_len)
+        y_padded[:len(y)] = y
+        y = y_padded
+    elif len(y) > max_pad_len:
+        y = np.asarray(y[:max_pad_len])
+    test_signals.append(y)
 
 mel_spect_test = np.asarray(list(map(mel_spectrogram, test_signals)))
 X_test = frame(mel_spect_test)
@@ -188,9 +189,11 @@ class_map = ['angry', 'fear', 'happy', 'neutral', 'sad']
 best_model.predict(np.expand_dims(X_test[1], axis = 0))
 pred_list = [] 
 for i in range(len(X_test)):
-  pred = best_model.predict(np.expand_dims(X_test[i], axis = 0))
-  pred_list.append(class_map[pred[0].argmax(0)])
+    pred = best_model.predict(np.expand_dims(X_test[i], axis = 0))
+    pred_list.append(class_map[pred[0].argmax(0)])
 
+
+## Save the results as a csv file
 import pandas as pd
 import datetime
 result_tuple = list(zip(filenames, pred_list))
