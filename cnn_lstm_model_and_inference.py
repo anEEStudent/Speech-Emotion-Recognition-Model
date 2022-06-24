@@ -1,20 +1,13 @@
 ### General imports ###
 import os
 from glob import glob
-import pickle
-import itertools
 import numpy as np
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
-
-### Graph imports ###
-import matplotlib.pyplot as plt
-from PIL import Image
+#!/usr/bin/env python3
 
 ### Audio import ###
 import librosa
-import IPython
-from IPython.display import Audio
 from pathlib import Path
 
 ## Basics ##
@@ -23,7 +16,6 @@ import os
 import numpy as np
 
 ## Audio Preprocessing ##
-import wave
 import librosa
 from scipy.stats import zscore
 

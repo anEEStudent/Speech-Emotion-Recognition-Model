@@ -71,18 +71,19 @@ def preprocess(dir, label, signals, labels):
     labels.append(label) 
   return signals, labels 
 
-
-
 from keras.models import load_model
-best_model = load_model('/home/dh/Downloads/Trained_Model_FINAL.hdf5')
-filenames = sorted(os.listdir('/home/dh/Downloads/test_audio'))
+best_model = load_model('Trained_Model_FINAL.hdf5')
+testAudioDir = 'test_audio' ## EDIT HERE
+filenames = sorted(os.listdir('testAudioDir'))
 print(f'Number of files: {len(filenames)}')
 test_signals = []
 sample_rate = 16000     
+
 # Max pad length (5.0 sec)
 max_pad_len = MAX_PAD_LENGTH
+
 for file in filenames: 
-  y, sr = librosa.core.load(Path('/home/dh/Downloads/test_audio/' + file), sr=sample_rate, offset=0.5)
+  y, sr = librosa.core.load(Path('testAudioDir/' + file), sr=sample_rate, offset=0.5)
   # Z-normalization
   y = zscore(y)
   # Padding or truncated signal 
@@ -110,5 +111,5 @@ import datetime
 result_tuple = list(zip(filenames, pred_list))
 submission = pd.DataFrame(result_tuple, columns=['filename', 'label'])
 now = datetime.datetime.now() 
-submission_name = 'finals_submission_new.csv'
+submission_name = 'submission.csv'
 submission[['filename', 'label']].to_csv(submission_name, header=None, index=None)
