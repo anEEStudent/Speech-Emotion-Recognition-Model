@@ -13,10 +13,9 @@ https://github.com/maelfabien/Multimodal-Emotion-Recognition/blob/master/README.
 The architecture of our model was inspired by the following open-source model:
 https://github.com/maelfabien/Multimodal-Emotion-Recognition/blob/master/README.md#v-how-to-use-it-
 
-We used some additional data from the RAVDESS open-source dataset on top of the data provided:
+We used some additional data from the RAVDESS open-source dataset on top of the data provided by the organisers:
 https://www.kaggle.com/datasets/uwrfkaggler/ravdess-emotional-speech-audio
 "The Ryerson Audio-Visual Database of Emotional Speech and Song (RAVDESS)" by Livingstone & Russo is licensed under CC BY-NA-SC 4.0.
-Specifically, we added in actors 1-10 for all emotions except for neutral where we added in actor 3 twice and left out actor 1.
 
 Team members: @anEEStudent, [@dominic-soh](https://github.com/dominic-soh), [@GordonShinozaki](https://github.com/GordonShinozaki)
 

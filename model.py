@@ -24,6 +24,7 @@ from tensorflow.keras.layers import LSTM
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
 
+MAX_PAD_LENGTH = 48000 # Max pad length that we will use
 
 ### Preprocessing functions declarations ###
 def mel_spectrogram(y, sr=16000, n_fft=512, win_length=256, hop_length=128, window='hamming', n_mels=128, fmax=4000): 
@@ -46,7 +47,7 @@ def frame(x, win_step=128, win_size=128):
 def preprocess(dir, label, signals, labels): 
     # Sample rate (16.0 kHz)
     sample_rate = 16000     
-    # Max pad length (5.0 sec)
+    # Max pad length (4.0 sec)
     max_pad_len = MAX_PAD_LENGTH
     walker = sorted(str(p) for p in Path(dir).glob(f'*.wav'))
 
@@ -68,7 +69,7 @@ def preprocess(dir, label, signals, labels):
 ### End of Preprocessing functions declarations ###
 
 
-MAX_PAD_LENGTH = 48000 # Max pad length that we will use
+
 
 ### Loading data for preprocessing, change directories as necessary ###
 signals = [] 
